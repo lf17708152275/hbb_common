@@ -100,8 +100,33 @@ const CHARS: &[char] = &[
     'm', 'n', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
 ];
 
-pub const RENDEZVOUS_SERVERS: &[&str] = &["rs-ny.rustdesk.com"];
-pub const RS_PUB_KEY: &str = "OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=";
+// 官方源代码
+// pub const RENDEZVOUS_SERVERS: &[&str] = &["rs-ny.rustdesk.com"];
+// pub const RS_PUB_KEY: &str = "OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=";
+
+// 自定义代码段
+lazy_static::lazy_static! {
+    pub static ref RENDEZVOUS_SERVERS: Vec<&'static str> = {
+        let raw = option_env!("SERVERS")
+            .map(|s| s.to_string())
+            .unwrap_or_default();
+        let leaked: &'static str = Box::leak(raw.into_boxed_str());
+        let mut v: Vec<&'static str> = leaked
+            .split(',')
+            .map(|x| x.trim())
+            .filter(|s| !s.is_empty())
+            .collect();
+        if v.is_empty() {
+            v.push("rs-ny.rustdesk.com");
+        }
+        v
+    };
+}
+pub const RS_PUB_KEY: &str = match option_env!("PUB_KEY") {
+    Some(s) => s,
+    None => "OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=",
+};
+// 自定义代码段
 
 pub const RENDEZVOUS_PORT: i32 = 21116;
 pub const RELAY_PORT: i32 = 21117;
